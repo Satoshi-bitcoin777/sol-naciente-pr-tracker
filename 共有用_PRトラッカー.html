@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="format-detection" content="telephone=no" />
+<title>Sol Naciente PRトラッカー (共有用スナップショット)</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; margin: 0; padding: 16px 20px 40px; background: #fafaf7; color: #1a1a1a; font-size: 14px; line-height: 1.55; }
+header h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: 0.02em; }
+.snapshot-badge { display: inline-block; font-size: 11px; padding: 3px 10px; background: #fff8d6; color: #7a5a00; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+.subtitle { color: #555; font-size: 12px; margin-bottom: 12px; }
+
+.global-filter { background: #fff; border: 1px solid #e6e6e0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.global-filter .label { font-size: 11px; color: #666; letter-spacing: 0.04em; text-transform: uppercase; }
+.period-tabs { display: inline-flex; gap: 4px; }
+.period-tabs button { font-size: 12px; padding: 5px 12px; border: 1px solid #d0d0c8; background: #fff; cursor: pointer; border-radius: 4px; color: #333; }
+.period-tabs button.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.date-mode { font-size: 12px; }
+.date-mode label { margin-right: 10px; cursor: pointer; }
+.range-info { font-size: 11px; color: #666; margin-left: auto; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi { background: #fff; border: 1px solid #e6e6e0; border-radius: 8px; padding: 12px 14px; }
+.kpi .label { font-size: 11px; color: #888; letter-spacing: 0.04em; text-transform: uppercase; }
+.kpi .value { font-size: 22px; font-weight: 600; margin-top: 2px; line-height: 1.15; }
+.kpi .sub { font-size: 11px; color: #666; margin-top: 2px; }
+
+.section { background: #fff; border: 1px solid #e6e6e0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+.section h2 { font-size: 14px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0ec; letter-spacing: 0.02em; display: flex; justify-content: space-between; align-items: center; }
+.section h2 .ctrl { font-size: 11px; font-weight: 400; color: #666; }
+
+.kw-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.kw-card { border-left: 4px solid #999; padding: 8px 12px; background: #fbfbf8; border-radius: 4px; }
+.kw-card .kwname { font-weight: 600; font-size: 13px; }
+.kw-card .kwstats { display: flex; gap: 14px; margin-top: 6px; }
+.kw-card .kwstat .v { font-size: 18px; font-weight: 600; }
+.kw-card .kwstat .l { font-size: 10px; color: #777; }
+
+.notes { font-size: 12px; color: #555; background: #fcfaf3; border: 1px dashed #d8cf95; border-radius: 6px; padding: 10px 12px; margin-top: 8px; }
+
+.article-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; font-size: 12px; }
+.article-controls input, .article-controls select { font-size: 12px; padding: 5px 8px; border: 1px solid #d0d0c8; border-radius: 4px; background: #fff; }
+.article-controls input { width: 220px; }
+
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+.tbl th { background: #f5f5ef; font-weight: 600; padding: 7px 8px; text-align: left; border-bottom: 1px solid #e6e6e0; cursor: pointer; user-select: none; }
+.tbl th.sort-asc::after { content: " ▲"; color:#888; }
+.tbl th.sort-desc::after { content: " ▼"; color:#888; }
+.tbl td { padding: 7px 8px; border-bottom: 1px solid #f0f0ec; vertical-align: top; }
+.tbl tr:hover td { background: #fafaf6; }
+.tbl a { color:#0a4a8a; text-decoration:none; }
+.tbl a:hover { text-decoration:underline; }
+.tbl .num { text-align: right; }
+
+.tier-badge { font-size: 10px; padding: 1px 6px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
+.tier-tier1 { background: #e6f0ff; color: #1d4e8a; }
+.tier-tier2 { background: #e8f5ec; color: #1f6b3a; }
+.tier-tier3 { background: #fff0e0; color: #8a4a00; }
+.tier-tier4 { background: #f0eaff; color: #5a3a8a; }
+.tier-exclude { background: #f0f0f0; color: #777; }
+
+.media-row.hit { background: #fffbe6; }
+.media-row.excl { color: #999; }
+
+.bar-row { display: grid; grid-template-columns: 180px 1fr 1fr; gap: 8px; align-items: center; padding: 3px 0; font-size: 12px; }
+.bar-row .bname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .bar { height: 16px; background: #e8e8e3; border-radius: 2px; position: relative; }
+.bar-row .bar > div { height: 100%; border-radius: 2px; }
+.bar-row .bar.count > div { background: #1a1a1a; }
+.bar-row .bar.reach > div { background: #e63946; }
+.bar-row .bnum { font-size: 11px; color: #555; padding-left: 6px; white-space: nowrap; }
+.bar-head { display: grid; grid-template-columns: 180px 1fr 1fr; gap: 8px; padding-bottom: 6px; font-size: 11px; color: #666; border-bottom: 1px solid #f0f0ec; margin-bottom: 6px; }
+.bar-head > div:nth-child(2)::after { content:""; }
+
+.trend-svg { width: 100%; height: 280px; }
+.trend-legend { display: flex; gap: 14px; font-size: 12px; margin-top: 6px; }
+.trend-legend .dot { display:inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+.empty-state { text-align: center; color: #999; padding: 40px 0; font-size: 13px; }
+.err-banner { background:#fee;border:1px solid #f99;padding:10px;margin:10px 0;font-size:12px; }
+
+@media (max-width: 760px) {
+  body { padding: 12px 12px 32px; font-size: 13px; }
+  header h1 { font-size: 18px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi .value { font-size: 18px; }
+  .kw-row { grid-template-columns: 1fr; }
+  .global-filter { flex-direction: column; align-items: stretch; gap: 8px; padding: 8px 10px; }
+  .range-info { margin-left: 0; }
+  .period-tabs { flex-wrap: wrap; }
+  .period-tabs button { padding: 6px 10px; }
+  .date-mode label { display: block; margin: 4px 0; }
+  .bar-row { grid-template-columns: 100px 1fr; font-size: 11px; }
+  .bar-row > .bar.reach { grid-column: 2; }
+  .bar-head { grid-template-columns: 100px 1fr; }
+  .bar-head > div:nth-child(3) { display: none; }
+  .trend-svg { height: 220px; }
+  .section { padding: 10px 12px; }
+  .section h2 { font-size: 13px; }
+  .article-controls input { width: 100%; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Sol Naciente PRトラッカー <span class="snapshot-badge" id="snapshotBadge">スナップショット</span></h1>
+</header>
+<div class="subtitle">監視中のキーワードと公開Web上での露出をまとめたダッシュボード。これは特定時点のスナップショット (静的レポート) です。</div>
+
+<div class="global-filter">
+  <span class="label">期間</span>
+  <span class="period-tabs" id="periodTabs">
+    <button data-period="1">1ヶ月</button>
+    <button data-period="3">3ヶ月</button>
+    <button data-period="6">6ヶ月</button>
+    <button data-period="12">1年</button>
+    <button data-period="all" class="active">全期間</button>
+  </span>
+  <span class="label">日付の扱い</span>
+  <span class="date-mode">
+    <label><input type="radio" name="dateMode" value="hybrid" checked> 公開日(なければ取得日)</label>
+    <label><input type="radio" name="dateMode" value="published"> 公開日のみ</label>
+  </span>
+  <span class="range-info" id="rangeInfo"></span>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="label">対象記事数</div><div class="value" id="kpiTotal">—</div><div class="sub" id="kpiTotalSub"></div></div>
+  <div class="kpi"><div class="label">推定総リーチ</div><div class="value" id="kpiReach">—</div><div class="sub">媒体マスタの想定値ベース</div></div>
+  <div class="kpi"><div class="label">露出媒体数</div><div class="value" id="kpiMedia">—</div><div class="sub" id="kpiMediaSub"></div></div>
+  <div class="kpi"><div class="label">スナップショット日時</div><div class="value" id="kpiUpdated" style="font-size:16px">—</div><div class="sub">記事ログのタイムスタンプ</div></div>
+</div>
+
+<div class="section"><h2>キーワード別サマリ</h2><div id="kwRow" class="kw-row"></div></div>
+
+<div class="section">
+  <h2>媒体別 露出件数 / 推定リーチ</h2>
+  <div id="mediaBars"></div>
+</div>
+
+<div class="section">
+  <h2>キーワード別 月次推移</h2>
+  <div id="trendArea"></div>
+  <div class="trend-legend" id="trendLegend"></div>
+  <div class="notes" id="trendNotes"></div>
+</div>
+
+<div class="section">
+  <h2>記事一覧 <span class="ctrl"><span id="articleCountInfo"></span></span></h2>
+  <div class="article-controls">
+    <span>月で絞り込み:</span>
+    <select id="monthFilter"><option value="">全月</option></select>
+    <input type="search" id="articleSearch" placeholder="タイトル・媒体・メモで検索" />
+  </div>
+  <div class="tbl-wrap">
+  <table class="tbl" id="articlesTbl">
+    <thead><tr>
+      <th data-sort="date">日付</th>
+      <th data-sort="title">タイトル</th>
+      <th data-sort="media">媒体</th>
+      <th>キーワード</th>
+      <th class="num" data-sort="reach">推定リーチ</th>
+      <th>メモ</th>
+    </tr></thead>
+    <tbody id="articlesTbody"></tbody>
+  </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>監視対象媒体一覧 <span class="ctrl"><span id="mediaListInfo"></span></span></h2>
+  <div class="tbl-wrap">
+  <table class="tbl">
+    <thead><tr><th>媒体名</th><th>ドメイン</th><th>tier</th><th class="num">想定1記事リーチ</th><th class="num">期間内件数</th><th class="num">合計リーチ寄与</th></tr></thead>
+    <tbody id="mediaTbody"></tbody>
+  </table>
+  </div>
+  <div class="notes">
+    「想定1記事リーチ」=この媒体に1記事掲載されたときに想定する閲覧数の概算。<br>
+    「ヒット」=現在の期間フィルタで少なくとも1件の記事がある媒体(黄色背景)。<br>
+    <b>tier=exclude</b>:Sol Naciente公式・アルビレックス新潟バルセロナ(自前メディア)、X/Instagram/YouTube(SNSは参考)、まとめサイト、Wikipedia/Facebook。
+  </div>
+</div>
+
+<script>
+var KEYWORDS = [
+  { id: "okubo",            label: "大久保嘉人",      color: "#e63946" },
+  { id: "sol_naciente_en",  label: "FC Sol Naciente", color: "#f4a261" },
+  { id: "sol_naciente_jp",  label: "ソル・ナシエンテ", color: "#2a9d8f" }
+];
+var DEFAULT_REACH = 5000;
+var MEDIA = {
+  "news.yahoo.co.jp":         { name:"Yahoo!ニュース",                tier:"tier1", reach:200000 },
+  "news.livedoor.com":        { name:"ライブドアニュース",            tier:"tier1", reach:80000 },
+  "news.goo.ne.jp":           { name:"gooニュース",                   tier:"tier1", reach:30000 },
+  "smart-flash.jp":           { name:"SmartFLASH",                    tier:"tier1", reach:25000 },
+  "prtimes.jp":               { name:"PR TIMES",                       tier:"tier1", reach:15000 },
+  "soccer-king.jp":           { name:"サッカーキング",                  tier:"tier2", reach:60000 },
+  "web.gekisaka.jp":          { name:"ゲキサカ",                        tier:"tier2", reach:70000 },
+  "football-zone.net":        { name:"フットボールゾーン",              tier:"tier2", reach:50000 },
+  "qoly.jp":                  { name:"Qoly",                            tier:"tier2", reach:30000 },
+  "the-digest.com":           { name:"THE DIGEST",                      tier:"tier2", reach:30000 },
+  "footballista.jp":          { name:"フットボリスタ",                  tier:"tier2", reach:20000 },
+  "footballchannel.jp":       { name:"フットボールチャンネル",          tier:"tier2", reach:30000 },
+  "football-tribe.com":       { name:"Football Tribe Japan",            tier:"tier3", reach:15000 },
+  "sportsbull.jp":            { name:"SPORTS BULL",                     tier:"tier2", reach:25000 },
+  "number.bunshun.jp":        { name:"Number Web",                      tier:"tier2", reach:60000 },
+  "daily.co.jp":              { name:"デイリースポーツ",                tier:"tier2", reach:40000 },
+  "sponichi.co.jp":           { name:"スポニチアネックス",              tier:"tier2", reach:50000 },
+  "nikkansports.com":         { name:"日刊スポーツ",                    tier:"tier2", reach:50000 },
+  "sanspo.com":               { name:"サンスポ",                        tier:"tier2", reach:30000 },
+  "hochi.news":               { name:"スポーツ報知",                    tier:"tier2", reach:30000 },
+  "tospo-web.co.jp":          { name:"東スポWEB",                       tier:"tier2", reach:25000 },
+  "asahi.com":                { name:"朝日新聞デジタル",                tier:"tier1", reach:60000 },
+  "mainichi.jp":              { name:"毎日新聞",                        tier:"tier1", reach:40000 },
+  "yomiuri.co.jp":            { name:"読売新聞オンライン",              tier:"tier1", reach:50000 },
+  "nikkei.com":               { name:"日本経済新聞",                    tier:"tier1", reach:50000 },
+  "nishispo.nishinippon.co.jp":{ name:"西スポWEB OTTO!",                tier:"tier3", reach:15000 },
+  "nishinippon.co.jp":        { name:"西日本新聞",                      tier:"tier3", reach:15000 },
+  "goetheweb.jp":             { name:"GOETHE",                          tier:"tier3", reach:20000 },
+  "tarzanweb.jp":             { name:"Tarzan Web",                      tier:"tier3", reach:15000 },
+  "natalie.mu":               { name:"ナタリー",                        tier:"tier2", reach:25000 },
+  "note.com":                 { name:"note",                            tier:"tier3", reach:3000 },
+  "ameblo.jp":                { name:"アメブロ",                        tier:"tier3", reach:5000 },
+  "meishukai.or.jp":          { name:"日本サッカー名蹴会",                tier:"tier4", reach:3000 },
+  "sportsmania.jp":           { name:"スポーツマニア",                   tier:"tier3", reach:12000 },
+  "news.infoseek.co.jp":      { name:"Infoseekニュース",                 tier:"tier1", reach:25000 },
+  "news.nifty.com":           { name:"ニフティニュース",                  tier:"tier1", reach:25000 },
+  "sportiva.shueisha.co.jp":  { name:"Sportiva",                          tier:"tier2", reach:25000 },
+  "soccerdigestweb.com":      { name:"サッカーダイジェスト",             tier:"tier2", reach:35000 },
+  "topics.smt.docomo.ne.jp":  { name:"dメニューニュース",                 tier:"tier1", reach:30000 },
+  "sukusuku.tokyo-np.co.jp":  { name:"東京すくすく",                     tier:"tier3", reach:10000 },
+  "nlab.itmedia.co.jp":       { name:"ねとらぼ",                          tier:"tier1", reach:30000 },
+  "square.unext.jp":          { name:"U-NEXT SQUARE",                    tier:"tier3", reach:10000 },
+  "x.com":                    { name:"X (Twitter)",                     tier:"exclude", reach:0 },
+  "instagram.com":            { name:"Instagram",                       tier:"exclude", reach:0 },
+  "youtube.com":              { name:"YouTube",                         tier:"exclude", reach:0 },
+  "albirex.com.sg":           { name:"アルビレックス新潟バルセロナ",      tier:"exclude", reach:0 },
+  "fc-solnaciente.com":       { name:"Sol Naciente公式",                 tier:"exclude", reach:0 },
+  "footballnet.2chblog.jp":   { name:"footballnet (まとめ)",             tier:"exclude", reach:0 },
+  "ja.wikipedia.org":         { name:"Wikipedia",                       tier:"exclude", reach:0 },
+  "en.wikipedia.org":         { name:"Wikipedia (en)",                  tier:"exclude", reach:0 },
+  "facebook.com":             { name:"Facebook (個別ページ)",           tier:"exclude", reach:0 }
+};
+var DOMAIN_ALIAS = { "twitter.com": "x.com" };
+var LOG_UPDATED = "2026-05-11T15:30";
+var ARTICLES = [
+  {url:"https://www.soccer-king.jp/news/world/esp/20260308/2134302.html", title:"元日本代表FW大久保嘉人氏がスペイン・バルセロナで新クラブ立ち上げ！ 日本でセレクションも開催", domain:"soccer-king.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:""},
+  {url:"https://number.bunshun.jp/articles/-/868377", title:"［スペイン定住ルポ］大久保嘉人「バスの喧騒に身を委ねて」", domain:"number.bunshun.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-12-11", notes:"Number Web (筆者:豊福晋)"},
+  {url:"https://nishispo.nishinippon.co.jp/article/885411", title:"大久保嘉人さん、今春からスペイン移住へ サッカー元日本代表、現役時代も現地でプレー", domain:"nishispo.nishinippon.co.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-01-10", notes:"西スポWEB OTTO! (移住発表時)"},
+  {url:"https://news.yahoo.co.jp/articles/2e5729d17af2168d0cdb03380d4500eac7cf2888", title:"元日本代表FW大久保嘉人氏がスペイン・バルセロナで新クラブ立ち上げ！（サッカーキング）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"サッカーキング配信"},
+  {url:"https://www.albirex.com.sg/news/44450/", title:"大久保 嘉人氏 アルビレックス新潟バルセロナ クラブダイレクター就任のお知らせ", domain:"albirex.com.sg", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-09-01", notes:""},
+  {url:"https://web.gekisaka.jp/news/world/detail/?447574-447574-fl=", title:"バルセロナで新チームを立ち上げ! 元日本代表FW大久保嘉人氏「日本をW杯優勝に導くストライカーを育てる」", domain:"web.gekisaka.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:""},
+  {url:"https://news.livedoor.com/topics/detail/30722453/", title:"元日本代表・大久保嘉人氏 スペイン・バルセロナで新クラブ立ち上げ", domain:"news.livedoor.com", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:""},
+  {url:"https://www.meishukai.or.jp/blog/20250908120900/", title:"大久保嘉人、引退後の新たな挑戦 ─ バルセロナで切り拓く第二の人生", domain:"meishukai.or.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-09-08", notes:""},
+  {url:"https://news.yahoo.co.jp/articles/33ec9b707bd93f06ff0c6e34508a459fcbf91654", title:"バルセロナ在住・大久保嘉人さんと再会！スペイン４部で奮闘中の日本人選手も取材（MBSニュース）", domain:"news.yahoo.co.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:null, notes:"MBSニュース配信"},
+  {url:"https://number.bunshun.jp/premier/articles/19216", title:"「スペインに住みたい！」息子たちの願いで‟バルセロナ移住”…大久保嘉人が明かす語学学校で‟猛勉強の日々”", domain:"number.bunshun.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-12-08", notes:"Number PREMIER #1133 巻頭特集 (筆者:豊福晋)"},
+  {url:"https://www.fc-solnaciente.com", title:"FC Sol Naciente 公式サイト", domain:"fc-solnaciente.com", matched_keywords:["sol_naciente_en"], found_at:"2026-05-10", published_at:null, notes:"公式"},
+  {url:"https://www.fc-solnaciente.com/news/bufjjm4x15v", title:"【プレスリリース配信】スペイン・バルセロナに新クラブ「FC Sol Naciente」を創設！", domain:"fc-solnaciente.com", matched_keywords:["sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"公式プレスリリース"},
+  {url:"https://prtimes.jp/main/html/rd/p/000000001.000179306.html", title:"元日本代表・大久保嘉人、バルセロナでサッカークラブ「FC Sol Naciente」を創設", domain:"prtimes.jp", matched_keywords:["okubo","sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"PR TIMESプレスリリース"},
+  {url:"https://sportsmania.jp/341765/", title:"元日本代表・大久保嘉人、バルセロナでサッカークラブ「FC Sol Naciente」を創設", domain:"sportsmania.jp", matched_keywords:["okubo","sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-03-08", notes:""},
+  {url:"https://news.infoseek.co.jp/article/prtimes_000000001_000179306/", title:"元日本代表・大久保嘉人、バルセロナでサッカークラブ「FC Sol Naciente」を創設", domain:"news.infoseek.co.jp", matched_keywords:["okubo","sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"Infoseek (PR TIMES配信)"},
+  {url:"https://www.football-zone.net/archives/633225", title:"大久保嘉人が資金調達「日本のため」 移住先スペインで新クラブ創設…10部から挑戦", domain:"football-zone.net", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:""},
+  {url:"https://news.yahoo.co.jp/articles/0773da3bd0e1c4b494cb8a9dd155f3e383aa241a", title:"大久保嘉人が資金調達「日本のため」 移住先スペインで新クラブ創設（FOOTBALL ZONE）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"FOOTBALL ZONE配信"},
+  {url:"https://news.yahoo.co.jp/articles/ec18ce6a81b2d878d1570c8642ad38e71884d7f4", title:"元サッカー日本代表・大久保嘉人氏 ９月からバルセロナでチームを立ち上げ（デイリースポーツ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"デイリースポーツ配信"},
+  {url:"https://news.yahoo.co.jp/articles/b3c8eeb856766ae5bb9b2b753d24914da565acfe", title:"元日本代表・大久保嘉人氏 バルセロナでサッカークラブ立ち上げ（デイリースポーツ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"デイリースポーツ配信"},
+  {url:"https://goetheweb.jp/person/article/20260319-yoshito-okubo", title:"元日本代表・大久保嘉人がスペインで挑む、日本人ストライカー育成プロジェクトとは", domain:"goetheweb.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-19", notes:""},
+  {url:"https://www.daily.co.jp/soccer/2026/03/09/0020103235.shtml", title:"元日本代表・大久保嘉人氏 バルセロナでサッカークラブ立ち上げ", domain:"daily.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-09", notes:"デイリースポーツ原本"},
+  {url:"https://news.livedoor.com/article/detail/30723679/", title:"元日本代表・大久保嘉人氏 バルセロナでサッカークラブ立ち上げ", domain:"news.livedoor.com", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-09", notes:"デイリースポーツ配信"},
+  {url:"https://x.com/SoccerKingJP/status/2030585351195316413", title:"サッカーキング X投稿: 元日本代表FW大久保嘉人氏がスペイン・バルセロナで新クラブ立ち上げ", domain:"x.com", matched_keywords:["okubo","sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"サッカーキング公式X"},
+  {url:"https://www.soccerdigestweb.com/news/detail/id=167082", title:"中盤で受け、捌き、ゴール前へ！ 大久保嘉人がスペインで練習に飛び入り参加", domain:"soccerdigestweb.com", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-01-16", notes:"サッカーダイジェスト"},
+  {url:"https://www.soccer-king.jp/news/japan/20250110/1978276.html", title:"元日本代表FW大久保嘉人氏、4月から家族でスペイン移住へ「自分らしく挑戦をしていきたい」", domain:"soccer-king.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-01-10", notes:"移住発表"},
+  {url:"https://prtimes.jp/main/html/rd/p/000000113.000034549.html", title:"Dual Grit FC、元サッカー日本代表・大久保嘉人氏率いるFC Sol Nacienteと特別マッチを開催", domain:"prtimes.jp", matched_keywords:["okubo","sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-04-20", notes:"Dual Grit FCコラボ プレスリリース"},
+  {url:"https://news.yahoo.co.jp/articles/267d63fb74d7f163aa07e3d2c3044f97d2d3ed2a", title:"元日本代表・大久保嘉人がスペインで挑む、日本人ストライカー育成プロジェクトとは（GOETHE）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-19", notes:"GOETHE配信"},
+  {url:"https://topics.smt.docomo.ne.jp/article/nikkansports/sports/f-sc-tp4-260308-202603080000908", title:"元日本代表FW大久保嘉人氏 ストライカー育成計画発表「リアル・ブルーロック」日本とスペインで", domain:"topics.smt.docomo.ne.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"dメニュー (日刊スポーツ配信)"},
+  {url:"https://news.yahoo.co.jp/articles/957fa21746e2657c255cb5320e65b98c6a37d751", title:"元日本代表FW大久保嘉人氏 ストライカー育成計画発表「リアル・ブルーロック」（日刊スポーツ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"日刊スポーツ配信"},
+  {url:"https://news.yahoo.co.jp/articles/335875874870a519d6c896013eb2c2bd1fbcc5ce", title:"元日本代表の大久保嘉人氏 日本人ストライカー育成へ スペインで新たな挑戦（スポニチ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"スポニチアネックス配信"},
+  {url:"https://news.yahoo.co.jp/articles/da436b5c9cd08a396cf15d4dcc75d6aa1d3eb84b", title:"「マジで俺がこの目で見る」日本屈指の点取り屋が『ストライカー』発掘セレクションを日本で開催（中日スポーツ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_en"], found_at:"2026-05-10", published_at:"2026-03-08", notes:"中日スポーツ配信"},
+  {url:"https://football-tribe.com/japan/2024/09/19/312756/", title:"大久保嘉人氏三男が長男に続き海外挑戦！父もプレーした国へ", domain:"football-tribe.com", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2024-09-19", notes:""},
+  {url:"https://nlab.itmedia.co.jp/cont/articles/3392644/", title:"大久保嘉人、4月から家族でスペイン移住へ 長男＆三男は2024年からサッカー留学", domain:"nlab.itmedia.co.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-01-10", notes:"ねとらぼ"},
+  {url:"https://web.gekisaka.jp/news/soccer/detail/?422569-422569-fl=", title:"大久保嘉人氏が4月からスペインに移住へ!! 直筆メッセージで報告", domain:"web.gekisaka.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-01-10", notes:"移住発表"},
+  {url:"https://web.gekisaka.jp/news/world/detail/?429693-429693-fl=", title:"スペイン移住の大久保嘉人氏、次男の古巣マジョルカ練習参加を報告", domain:"web.gekisaka.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-04-15", notes:""},
+  {url:"https://nishispo.nishinippon.co.jp/article/902234", title:"「いつか指導者として日本に」スペイン移住のサッカー元日本代表・大久保嘉人さん、新しい挑戦への思いを明かす", domain:"nishispo.nishinippon.co.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-03-28", notes:"西スポWEB OTTO!"},
+  {url:"https://x.com/RCD_Mallorca_JP/status/1956528152030953581", title:"RCDマジョルカ X投稿: 大久保嘉人がマジョルカ・ジャパン・スペシャル・アンバサダーとして生配信に登場", domain:"x.com", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-08-16", notes:"RCDマジョルカ公式X"},
+  {url:"https://square.unext.jp/article/yoshito-okubo-interview", title:"大久保嘉人が語る、ラ・リーガでの壁と成功体験——マジョルカでのプレーを経て、訪れた変化とは", domain:"square.unext.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2023-08-08", notes:"U-NEXT SQUARE"},
+  {url:"https://sukusuku.tokyo-np.co.jp/oyako/66063/", title:"サッカー元日本代表 大久保嘉人さん 1年弱の親子二人暮らし 家事と子どもの成長に向き合って", domain:"sukusuku.tokyo-np.co.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2023-01-30", notes:"東京すくすく"},
+  {url:"https://www.instagram.com/p/DWRAIOEjbsv/", title:"FC Sol Naciente ストライカー発掘セレクション続報 (Instagram)", domain:"instagram.com", matched_keywords:["sol_naciente_en"], found_at:"2026-05-10", published_at:null, notes:"FC Sol Naciente公式IG"},
+  {url:"https://news.yahoo.co.jp/articles/2ffe79e99f0832776e2a3abefe634e820ccb0c3b", title:"大久保嘉人氏 スペイン10部相当クラブトライアウト最終選考を実施「僕みたいな、やんちゃな選手を」（スポニチ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-11", published_at:"2026-05-10", notes:"スポニチアネックス配信 (5/10 22:12)"},
+  {url:"https://news.yahoo.co.jp/articles/5d1c7167b4e7f4c9be4cdbb96ac79e25d8ec32bc", title:"元日本代表・大久保嘉人氏がFW発掘トライアウト「ヤンチャな選手をつくりたい」（日刊スポーツ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-11", published_at:"2026-05-10", notes:"日刊スポーツ配信 (5/10 20:37)"},
+  {url:"https://news.livedoor.com/topics/detail/31228176/", title:"大久保嘉人氏 スペイン10部相当クラブトライアウト最終選考を実施「僕みたいな、やんちゃな選手を」", domain:"news.livedoor.com", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-11", published_at:"2026-05-10", notes:"スポニチ配信 (5/10掲載)"},
+  {url:"https://news.nifty.com/article/sports/soccer/12192-5017565/", title:"元日本代表FW大久保嘉人氏がスペイン・バルセロナで新クラブ立ち上げ！ 日本でセレクションも開催", domain:"news.nifty.com", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-11", published_at:"2026-03-08", notes:"ニフティニュース (サッカーキング配信)"},
+  {url:"https://topics.smt.docomo.ne.jp/article/hochi/sports/hochi-20260308-OHT1T51094", title:"元日本代表・大久保嘉人氏がスペインでサッカークラブ創設へ「本気で目指します」日本でトライアウト開催も", domain:"topics.smt.docomo.ne.jp", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-05-11", published_at:"2026-03-08", notes:"dメニュー (スポーツ報知配信)"}
+];
+
+var state = { period: 'all', dateMode: 'hybrid', monthFilter: '', search: '', sortKey: 'date', sortDir: 'desc' };
+
+function $(id){ return document.getElementById(id); }
+function fmtInt(n){ return (n||0).toLocaleString('ja-JP'); }
+function fmtReach(n){ if(!n) return '0'; if(n>=100000000) return (n/100000000).toFixed(1)+'億'; if(n>=10000) return (n/10000).toFixed(1)+'万'; return fmtInt(n); }
+function effectiveDate(a){ return state.dateMode === 'published' ? a.published_at : (a.published_at || a.found_at || null); }
+function ymOf(d){ return d ? d.slice(0,7) : null; }
+function todayYm(){ var d = new Date(); var m = d.getMonth()+1; return d.getFullYear() + '-' + (m<10 ? '0'+m : ''+m); }
+function addMonths(ym, n){ var p = ym.split('-'); var t = new Date(parseInt(p[0],10), parseInt(p[1],10)-1+n, 1); var m = t.getMonth()+1; return t.getFullYear() + '-' + (m<10 ? '0'+m : ''+m); }
+function monthRange(start, end){ var out = []; var cur = start; while(cur <= end){ out.push(cur); cur = addMonths(cur, 1); } return out; }
+function periodWindow(){ if(state.period === 'all') return null; var m = parseInt(state.period, 10); var endYm = todayYm(); return { startYm: addMonths(endYm, -(m - 1)), endYm: endYm }; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]; }); }
+
+function enrichAll(){
+  var out = [];
+  for(var i=0; i<ARTICLES.length; i++){
+    var a = ARTICLES[i];
+    var dom = DOMAIN_ALIAS[a.domain] || a.domain;
+    var m = MEDIA[dom] || {};
+    var reach = (m.tier === 'exclude') ? 0 : (m.reach != null ? m.reach : DEFAULT_REACH);
+    out.push({
+      url: a.url, title: a.title, found_at: a.found_at, published_at: a.published_at, notes: a.notes,
+      matched_keywords: a.matched_keywords, domain: dom,
+      media_name: m.name || dom, tier: m.tier || 'tier4', reach_per_article: reach
+    });
+  }
+  return out;
+}
+function filterByPeriod(arr){
+  var w = periodWindow(); if(!w) return arr;
+  var out = [];
+  for(var i=0;i<arr.length;i++){ var ym = ymOf(effectiveDate(arr[i])); if(ym && ym >= w.startYm && ym <= w.endYm) out.push(arr[i]); }
+  return out;
+}
+function filterByMonth(arr){
+  if(!state.monthFilter) return arr;
+  var out = []; for(var i=0;i<arr.length;i++){ if(ymOf(effectiveDate(arr[i])) === state.monthFilter) out.push(arr[i]); }
+  return out;
+}
+function filterBySearch(arr){
+  if(!state.search) return arr;
+  var q = state.search.toLowerCase();
+  var out = [];
+  for(var i=0;i<arr.length;i++){
+    var a = arr[i];
+    var hay = ((a.title||'') + ' ' + (a.media_name||'') + ' ' + (a.notes||'') + ' ' + (a.domain||'')).toLowerCase();
+    if(hay.indexOf(q) !== -1) out.push(a);
+  }
+  return out;
+}
+function sortArticles(arr){
+  var k = state.sortKey, dir = state.sortDir === 'asc' ? 1 : -1;
+  return arr.slice().sort(function(a, b){
+    var av, bv;
+    if(k === 'date'){ av = effectiveDate(a)||''; bv = effectiveDate(b)||''; }
+    else if(k === 'title'){ av = a.title||''; bv = b.title||''; }
+    else if(k === 'media'){ av = a.media_name||''; bv = b.media_name||''; }
+    else if(k === 'reach'){ av = a.reach_per_article||0; bv = b.reach_per_article||0; return (av-bv)*dir; }
+    if(av < bv) return -1*dir; if(av > bv) return 1*dir; return 0;
+  });
+}
+
+function renderKPIs(filtered, all){
+  var included = filtered.filter(function(a){ return a.tier !== 'exclude'; });
+  $('kpiTotal').textContent = fmtInt(included.length);
+  $('kpiTotalSub').textContent = '(除外 ' + (filtered.length - included.length) + ' 件)';
+  var totalReach = 0; for(var i=0;i<included.length;i++) totalReach += included[i].reach_per_article;
+  $('kpiReach').textContent = fmtReach(totalReach);
+  var domSet = {}; for(var i=0;i<included.length;i++) domSet[included[i].domain] = true;
+  $('kpiMedia').textContent = fmtInt(Object.keys(domSet).length);
+  var knownMedia = 0; for(var k in MEDIA){ if(MEDIA[k].tier !== 'exclude') knownMedia++; }
+  $('kpiMediaSub').textContent = '集計対象 ' + knownMedia + ' 媒体中';
+  $('kpiUpdated').textContent = LOG_UPDATED;
+  $('snapshotBadge').textContent = 'スナップショット: ' + LOG_UPDATED;
+  var w = periodWindow();
+  $('rangeInfo').textContent = w
+    ? (w.startYm + ' 〜 ' + w.endYm + ' ・ 全 ' + fmtInt(all.length) + ' 件中 ' + fmtInt(filtered.length) + ' 件')
+    : ('全期間 ・ 全 ' + fmtInt(all.length) + ' 件中 ' + fmtInt(filtered.length) + ' 件');
+}
+function renderKwCards(filtered){
+  var row = $('kwRow'); row.innerHTML = '';
+  for(var i=0;i<KEYWORDS.length;i++){
+    var kw = KEYWORDS[i];
+    var matched = filtered.filter(function(a){ return a.tier !== 'exclude' && a.matched_keywords.indexOf(kw.id) !== -1; });
+    var r = 0; for(var j=0;j<matched.length;j++) r += matched[j].reach_per_article;
+    var doms = {}; for(var j=0;j<matched.length;j++) doms[matched[j].domain] = true;
+    var card = document.createElement('div');
+    card.className = 'kw-card'; card.style.borderLeftColor = kw.color;
+    card.innerHTML = '<div class="kwname">' + esc(kw.label) + '</div><div class="kwstats">'
+      + '<div class="kwstat"><div class="v">' + fmtInt(matched.length) + '</div><div class="l">記事</div></div>'
+      + '<div class="kwstat"><div class="v">' + fmtReach(r) + '</div><div class="l">推定リーチ</div></div>'
+      + '<div class="kwstat"><div class="v">' + fmtInt(Object.keys(doms).length) + '</div><div class="l">媒体</div></div>'
+      + '</div>';
+    row.appendChild(card);
+  }
+}
+function renderMediaBars(filtered){
+  var byMedia = {};
+  for(var i=0;i<filtered.length;i++){
+    var a = filtered[i];
+    if(a.tier === 'exclude') continue;
+    if(!byMedia[a.domain]) byMedia[a.domain] = { name: a.media_name, count: 0, reach: 0 };
+    byMedia[a.domain].count++;
+    byMedia[a.domain].reach += a.reach_per_article;
+  }
+  var arr = []; for(var k in byMedia) arr.push(byMedia[k]);
+  arr.sort(function(a,b){ return b.reach - a.reach; });
+  var wrap = $('mediaBars');
+  if(arr.length === 0){ wrap.innerHTML = '<div class="empty-state">この期間に該当する記事はありません</div>'; return; }
+  var maxCount = 0, maxReach = 0;
+  for(var i=0;i<arr.length;i++){ if(arr[i].count > maxCount) maxCount = arr[i].count; if(arr[i].reach > maxReach) maxReach = arr[i].reach; }
+  var html = '<div class="bar-head"><div>媒体</div><div>記事数 (黒)</div><div>推定リーチ (赤)</div></div>';
+  for(var i=0;i<arr.length;i++){
+    var m = arr[i];
+    var cw = maxCount > 0 ? Math.max(2, Math.round(m.count/maxCount*100)) : 0;
+    var rw = maxReach > 0 ? Math.max(2, Math.round(m.reach/maxReach*100)) : 0;
+    html += '<div class="bar-row">'
+      + '<div class="bname" title="' + esc(m.name) + '">' + esc(m.name) + '</div>'
+      + '<div class="bar count"><div style="width:' + cw + '%"></div><span class="bnum" style="position:absolute;left:' + cw + '%;top:0;">' + fmtInt(m.count) + '</span></div>'
+      + '<div class="bar reach"><div style="width:' + rw + '%"></div><span class="bnum" style="position:absolute;left:' + rw + '%;top:0;">' + fmtReach(m.reach) + '</span></div>'
+      + '</div>';
+  }
+  wrap.innerHTML = html;
+}
+function renderTrend(filtered){
+  var dated = [];
+  for(var i=0;i<filtered.length;i++){
+    var a = filtered[i]; if(a.tier === 'exclude') continue;
+    var ym = ymOf(effectiveDate(a)); if(ym) dated.push({ ym: ym, kws: a.matched_keywords });
+  }
+  var w = periodWindow();
+  var months = [];
+  if(w) months = monthRange(w.startYm, w.endYm);
+  else if(dated.length > 0){
+    var all = dated.map(function(d){ return d.ym; }).sort();
+    var maxYm = todayYm() > all[all.length-1] ? todayYm() : all[all.length-1];
+    months = monthRange(all[0], maxYm);
+  }
+  var byKwMonth = {};
+  for(var i=0;i<KEYWORDS.length;i++) byKwMonth[KEYWORDS[i].id] = {};
+  for(var i=0;i<dated.length;i++){
+    var d = dated[i]; if(months.indexOf(d.ym) === -1) continue;
+    for(var j=0;j<d.kws.length;j++){
+      var kid = d.kws[j]; if(byKwMonth[kid]) byKwMonth[kid][d.ym] = (byKwMonth[kid][d.ym]||0) + 1;
+    }
+  }
+  // Build SVG
+  var area = $('trendArea');
+  if(months.length === 0){ area.innerHTML = '<div class="empty-state">表示するデータがありません</div>'; $('trendLegend').innerHTML = ''; $('trendNotes').textContent = ''; return; }
+  var W = 800, H = 280, padL = 40, padR = 20, padT = 20, padB = 30;
+  var iw = W - padL - padR, ih = H - padT - padB;
+  var maxY = 1;
+  for(var i=0;i<KEYWORDS.length;i++){
+    var data = byKwMonth[KEYWORDS[i].id];
+    for(var m in data) if(data[m] > maxY) maxY = data[m];
+  }
+  var stepX = months.length > 1 ? iw/(months.length-1) : 0;
+  var stepY = ih/maxY;
+  var svg = '<svg class="trend-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
+  // Y grid
+  for(var y=0; y<=maxY; y++){
+    var py = padT + ih - y*stepY;
+    svg += '<line x1="' + padL + '" y1="' + py + '" x2="' + (W-padR) + '" y2="' + py + '" stroke="#eee" stroke-width="1" />';
+    svg += '<text x="' + (padL-6) + '" y="' + (py+3) + '" font-size="10" fill="#888" text-anchor="end">' + y + '</text>';
+  }
+  // X labels (every few months for readability)
+  var skip = Math.max(1, Math.ceil(months.length/10));
+  for(var i=0;i<months.length;i++){
+    if(i % skip !== 0 && i !== months.length-1) continue;
+    var px = padL + i*stepX;
+    svg += '<text x="' + px + '" y="' + (H-8) + '" font-size="10" fill="#888" text-anchor="middle">' + months[i] + '</text>';
+  }
+  // Lines
+  for(var i=0;i<KEYWORDS.length;i++){
+    var kw = KEYWORDS[i]; var data = byKwMonth[kw.id];
+    var pts = [];
+    for(var j=0;j<months.length;j++){
+      var v = data[months[j]] || 0;
+      var px = padL + j*stepX;
+      var py = padT + ih - v*stepY;
+      pts.push([px, py]);
+    }
+    var pathD = '';
+    for(var j=0;j<pts.length;j++) pathD += (j === 0 ? 'M' : 'L') + pts[j][0].toFixed(1) + ',' + pts[j][1].toFixed(1) + ' ';
+    svg += '<path d="' + pathD + '" stroke="' + kw.color + '" stroke-width="2" fill="none" />';
+    for(var j=0;j<pts.length;j++){
+      svg += '<circle cx="' + pts[j][0].toFixed(1) + '" cy="' + pts[j][1].toFixed(1) + '" r="3" fill="' + kw.color + '" />';
+    }
+  }
+  svg += '</svg>';
+  area.innerHTML = svg;
+  // Legend
+  var legend = '';
+  for(var i=0;i<KEYWORDS.length;i++){
+    legend += '<span><span class="dot" style="background:' + KEYWORDS[i].color + '"></span>' + esc(KEYWORDS[i].label) + '</span>';
+  }
+  $('trendLegend').innerHTML = legend;
+  // Notes
+  var includedTotal = 0;
+  for(var i=0;i<filtered.length;i++) if(filtered[i].tier !== 'exclude') includedTotal++;
+  var noDate = includedTotal - dated.length;
+  var msg = state.dateMode === 'hybrid' ? '公開日(なければ取得日)でプロット。' : '公開日のみでプロット。';
+  msg += ' 表示中 ' + fmtInt(dated.filter(function(d){ return months.indexOf(d.ym) !== -1; }).length) + '件 / 期間内 ' + fmtInt(includedTotal) + '件 (うち' + fmtInt(noDate) + '件は日付不明)。';
+  $('trendNotes').textContent = msg;
+}
+function renderArticlesTable(forTable){
+  forTable = filterBySearch(forTable);
+  var sorted = sortArticles(forTable);
+  var tbody = $('articlesTbody'); var html = '';
+  for(var i=0;i<sorted.length;i++){
+    var a = sorted[i];
+    var dateStr = a.published_at || (a.found_at ? '(取得 ' + a.found_at + ')' : '');
+    var kwHtml = '';
+    for(var j=0;j<(a.matched_keywords||[]).length;j++){
+      var kid = a.matched_keywords[j];
+      var kw = null;
+      for(var k=0;k<KEYWORDS.length;k++) if(KEYWORDS[k].id === kid) { kw = KEYWORDS[k]; break; }
+      if(kw) kwHtml += '<span style="color:' + kw.color + '">●</span> ' + esc(kw.label) + '<br>';
+    }
+    html += '<tr>'
+      + '<td style="white-space:nowrap;">' + esc(dateStr) + '</td>'
+      + '<td><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.title || a.url) + '</a></td>'
+      + '<td>' + esc(a.media_name) + '<span class="tier-badge tier-' + a.tier + '">' + a.tier + '</span></td>'
+      + '<td>' + kwHtml + '</td>'
+      + '<td class="num">' + (a.tier === 'exclude' ? '—' : fmtReach(a.reach_per_article)) + '</td>'
+      + '<td>' + esc(a.notes || '') + '</td>'
+      + '</tr>';
+  }
+  tbody.innerHTML = html;
+  $('articleCountInfo').textContent = fmtInt(sorted.length) + ' 件';
+  // Update sort indicators
+  var ths = document.querySelectorAll('#articlesTbl th');
+  for(var i=0;i<ths.length;i++){
+    ths[i].classList.remove('sort-asc'); ths[i].classList.remove('sort-desc');
+    if(ths[i].dataset.sort === state.sortKey) ths[i].classList.add(state.sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+  }
+}
+function renderMediaList(filtered){
+  var counts = {};
+  for(var i=0;i<filtered.length;i++){
+    var a = filtered[i];
+    if(!counts[a.domain]) counts[a.domain] = { count: 0, reach: 0 };
+    counts[a.domain].count++; counts[a.domain].reach += a.reach_per_article;
+  }
+  var tierRank = { tier1:1, tier2:2, tier3:3, tier4:4, exclude:5 };
+  var rows = [];
+  for(var dom in MEDIA){ var m = MEDIA[dom]; rows.push({ domain: dom, name: m.name, tier: m.tier, reach: m.reach, hit: counts[dom] }); }
+  rows.sort(function(a, b){ var ta = tierRank[a.tier]||9, tb = tierRank[b.tier]||9; if(ta !== tb) return ta - tb; return (b.reach||0) - (a.reach||0); });
+  var tbody = $('mediaTbody'); var html = ''; var hits = 0;
+  for(var i=0;i<rows.length;i++){
+    var r = rows[i];
+    var cls = r.hit ? 'media-row hit' : (r.tier === 'exclude' ? 'media-row excl' : 'media-row');
+    if(r.hit) hits++;
+    html += '<tr class="' + cls + '">'
+      + '<td>' + esc(r.name) + '</td>'
+      + '<td style="color:#666;font-family:-apple-system,monospace;font-size:11px;">' + r.domain + '</td>'
+      + '<td><span class="tier-badge tier-' + r.tier + '">' + r.tier + '</span></td>'
+      + '<td class="num">' + (r.tier === 'exclude' ? '—' : fmtReach(r.reach)) + '</td>'
+      + '<td class="num">' + (r.hit ? fmtInt(r.hit.count) : '—') + '</td>'
+      + '<td class="num">' + (r.hit && r.tier !== 'exclude' ? fmtReach(r.hit.reach) : '—') + '</td>'
+      + '</tr>';
+  }
+  tbody.innerHTML = html;
+  $('mediaListInfo').textContent = fmtInt(hits) + ' ヒット / 全 ' + fmtInt(rows.length) + ' 媒体';
+}
+function populateMonthFilter(filteredByPeriod){
+  var sel = $('monthFilter'); var ms = {};
+  for(var i=0;i<filteredByPeriod.length;i++){ var ym = ymOf(effectiveDate(filteredByPeriod[i])); if(ym) ms[ym] = true; }
+  var months = Object.keys(ms).sort().reverse();
+  var html = '<option value="">全月</option>';
+  for(var i=0;i<months.length;i++) html += '<option value="' + months[i] + '"' + (months[i] === state.monthFilter ? ' selected' : '') + '>' + months[i] + '</option>';
+  sel.innerHTML = html;
+}
+
+function renderAll(){
+  try {
+    var all = enrichAll();
+    var filtered = filterByPeriod(all);
+    var forTable = filterByMonth(filtered);
+    renderKPIs(filtered, all);
+    renderKwCards(filtered);
+    renderMediaBars(filtered);
+    renderTrend(filtered);
+    populateMonthFilter(filtered);
+    renderArticlesTable(forTable);
+    renderMediaList(filtered);
+  } catch(e) {
+    console.error('renderAll error:', e);
+    var div = document.createElement('div');
+    div.className = 'err-banner';
+    div.textContent = '描画エラー: ' + e.message + ' (詳細はコンソールへ)';
+    document.body.insertBefore(div, document.body.firstChild);
+  }
+}
+
+// Wire up controls
+var periodBtns = document.querySelectorAll('#periodTabs button');
+for(var i=0;i<periodBtns.length;i++){
+  (function(btn){
+    btn.addEventListener('click', function(){
+      for(var j=0;j<periodBtns.length;j++) periodBtns[j].classList.remove('active');
+      btn.classList.add('active');
+      state.period = btn.dataset.period; state.monthFilter = '';
+      renderAll();
+    });
+  })(periodBtns[i]);
+}
+var dateRadios = document.querySelectorAll('input[name="dateMode"]');
+for(var i=0;i<dateRadios.length;i++){
+  dateRadios[i].addEventListener('change', function(e){ state.dateMode = e.target.value; renderAll(); });
+}
+$('monthFilter').addEventListener('change', function(e){ state.monthFilter = e.target.value; renderAll(); });
+$('articleSearch').addEventListener('input', function(e){ state.search = e.target.value; renderArticlesTable(filterByMonth(filterByPeriod(enrichAll()))); });
+
+// Sortable column headers
+var sortTh = document.querySelectorAll('#articlesTbl th[data-sort]');
+for(var i=0;i<sortTh.length;i++){
+  (function(th){
+    th.addEventListener('click', function(){
+      var k = th.dataset.sort;
+      if(state.sortKey === k){ state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; }
+      else { state.sortKey = k; state.sortDir = (k === 'date' || k === 'reach') ? 'desc' : 'asc'; }
+      renderArticlesTable(filterByMonth(filterByPeriod(enrichAll())));
+    });
+  })(sortTh[i]);
+}
+
+renderAll();
+</script>
+</body>
+</html>

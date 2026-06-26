@@ -241,12 +241,15 @@ var MEDIA = {
   "albirex.com.sg":           { name:"アルビレックス新潟バルセロナ",      tier:"exclude", reach:0 },
   "fc-solnaciente.com":       { name:"Sol Naciente公式",                 tier:"exclude", reach:0 },
   "footballnet.2chblog.jp":   { name:"footballnet (まとめ)",             tier:"exclude", reach:0 },
+  "chiba-tv.com":             { name:"チバテレ＋プラス",                tier:"tier3", reach:8000 },
+  "iese-japan.com":           { name:"IESE Japan",                       tier:"tier4", reach:5000 },
+  "note.tokyo-sports.co.jp":  { name:"東スポnote",                       tier:"tier3", reach:8000 },
   "ja.wikipedia.org":         { name:"Wikipedia",                       tier:"exclude", reach:0 },
   "en.wikipedia.org":         { name:"Wikipedia (en)",                  tier:"exclude", reach:0 },
   "facebook.com":             { name:"Facebook (個別ページ)",           tier:"exclude", reach:0 }
 };
 var DOMAIN_ALIAS = { "twitter.com": "x.com" };
-var LOG_UPDATED = "2026-05-12T15:00";
+var LOG_UPDATED = "2026-06-26T15:00";
 var ARTICLES = [
   {url:"https://www.soccer-king.jp/news/world/esp/20260308/2134302.html", title:"元日本代表FW大久保嘉人氏がスペイン・バルセロナで新クラブ立ち上げ！ 日本でセレクションも開催", domain:"soccer-king.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-10", published_at:"2026-03-08", notes:""},
   {url:"https://number.bunshun.jp/articles/-/868377", title:"［スペイン定住ルポ］大久保嘉人「バスの喧騒に身を委ねて」", domain:"number.bunshun.jp", matched_keywords:["okubo"], found_at:"2026-05-10", published_at:"2025-12-11", notes:"Number Web (筆者:豊福晋)"},
@@ -296,7 +299,15 @@ var ARTICLES = [
   {url:"https://www.football-zone.net/archives/643930", title:"大久保嘉人がスペインで実感「日本と違う」 FW発掘トライアウト実施…伝えたい「ゴールとは何か」", domain:"football-zone.net", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-12", published_at:"2026-05-11", notes:"FOOTBALL ZONE原本 (トライアウト独占インタビュー)"},
   {url:"https://news.yahoo.co.jp/articles/9fb040641bda91f9b7767f2e024658acf635ecad", title:"大久保嘉人がスペインで実感「日本と違う」 FW発掘トライアウト実施…伝えたい「ゴールとは何か」（FOOTBALL ZONE）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-12", published_at:"2026-05-11", notes:"FOOTBALL ZONE配信 (5/11 18:10)"},
   {url:"https://news.livedoor.com/topics/detail/31236270/", title:"大久保嘉人がスペインで実感「日本と違う」 FW発掘トライアウト実施…伝えたい「ゴールとは何か」", domain:"news.livedoor.com", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-12", published_at:"2026-05-11", notes:"FOOTBALL ZONE配信"},
-  {url:"https://news.infoseek.co.jp/article/gekisaka_447574/", title:"バルセロナで新チームを立ち上げ! 元日本代表FW大久保嘉人氏「日本をW杯優勝に導くストライカーを育てる」", domain:"news.infoseek.co.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-12", published_at:"2026-03-08", notes:"Infoseek (ゲキサカ配信)"}
+  {url:"https://news.infoseek.co.jp/article/gekisaka_447574/", title:"バルセロナで新チームを立ち上げ! 元日本代表FW大久保嘉人氏「日本をW杯優勝に導くストライカーを育てる」", domain:"news.infoseek.co.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-05-12", published_at:"2026-03-08", notes:"Infoseek (ゲキサカ配信)"},
+  {url:"https://www.football-zone.net/archives/650276", title:"スタメン落ちの功労者も「日本のために」 大久保嘉人が振り返る南アW杯…チームを変えた夜「すごくスッキリした」", domain:"football-zone.net", matched_keywords:["okubo"], found_at:"2026-06-26", published_at:"2026-06-11", notes:"FOOTBALL ZONE W杯特別解説 第1回 (取材:瀬谷宏)"},
+  {url:"https://news.yahoo.co.jp/articles/32c5cdc617fb0957bf0b978ebb3aa008817f0323", title:"チーム崩壊「今更遅いやろ」 大久保嘉人が明かすW杯の内紛…直前の惨状「信じられなかった」（FOOTBALL ZONE）", domain:"news.yahoo.co.jp", matched_keywords:["okubo"], found_at:"2026-06-26", published_at:"2026-06-12", notes:"FOOTBALL ZONE配信 (W杯特別解説 第2回)"},
+  {url:"https://www.chiba-tv.com/plus/detail/amp/2026061768159", title:"4発快勝も「参考外ですよ」 大久保嘉人が感じた相手の崩壊…光った“スイッチ”役「安心して見ていられた」", domain:"chiba-tv.com", matched_keywords:["okubo"], found_at:"2026-06-26", published_at:"2026-06-21", notes:"チバテレ＋プラス (FOOTBALL ZONE配信)"},
+  {url:"https://iese-japan.com/special/yoshito_okubo_interview/", title:"間違いを恐れず挑戦すれば新しい自分が作れる 元サッカー日本代表 大久保嘉人さんインタビュー", domain:"iese-japan.com", matched_keywords:["okubo","sol_naciente_jp"], found_at:"2026-06-26", published_at:"2026-04-25", notes:"IESE日本校 ロングインタビュー"},
+  {url:"https://note.tokyo-sports.co.jp/n/n6834a031c926", title:"サッカー日本代表W杯メンバー発表における〝サプライズ〟を東スポで振り返る", domain:"note.tokyo-sports.co.jp", matched_keywords:["okubo"], found_at:"2026-06-26", published_at:null, notes:"東スポnote (大久保嘉人のサプライズ言及あり)"},
+  {url:"https://news.yahoo.co.jp/articles/d731dc08bd8a937c0fbcc44b33aa0889cafb0ffb", title:"バルセロナで新チームを立ち上げ! 元日本代表FW大久保嘉人氏「日本をW杯優勝に導くストライカーを育てる」（ゲキサカ）", domain:"news.yahoo.co.jp", matched_keywords:["okubo","sol_naciente_en","sol_naciente_jp"], found_at:"2026-06-26", published_at:"2026-03-08", notes:"ゲキサカ配信"},
+  {url:"https://www.youtube.com/watch?v=AShh5BqQpAc", title:"【単独インタビュー】大久保嘉人「スペイン人になるよ、俺」 家族でスペイン移住へ！【KICK OFF！ KANSAI】", domain:"youtube.com", matched_keywords:["okubo"], found_at:"2026-06-26", published_at:null, notes:"MBS KICK OFF! KANSAI 単独インタビュー"},
+  {url:"https://www.instagram.com/reel/DYXSlNEIJ2K/", title:"ワールドカップ日本代表メンバー発表を見る大久保嘉人&碧人", domain:"instagram.com", matched_keywords:["okubo"], found_at:"2026-06-26", published_at:null, notes:"大久保家のIG reel"}
 ];
 
 var state = { period: 'all', dateMode: 'hybrid', monthFilter: '', search: '', sortKey: 'date', sortDir: 'desc' };
